@@ -1,4 +1,3 @@
-
 #[derive(Debug, Copy, Clone)]
 pub struct CarState {
     pub x: f64,
@@ -43,4 +42,16 @@ impl std::ops::Mul<f64> for CarState {
             velocity: self.velocity * other,
         }
     }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Rectangular {
+    pub x1: f64,
+    pub y1: f64,
+    pub x2: f64,
+    pub y2: f64,
+    pub x3: f64,
+    pub y3: f64,
+    pub x4: f64,
+    pub y4: f64,
 }

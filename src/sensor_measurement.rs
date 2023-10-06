@@ -5,16 +5,12 @@ use rand_distr::{Distribution, Normal};
 use crate::car::{Car, KinematicBicycleModel};
 use crate::state::CarState;
 
+use crate::state::Rectangular;
+
+
 pub struct SensorState {
     pub state: CarState,
-    pub x1: f64,
-    pub y1: f64,
-    pub x2: f64,
-    pub y2: f64,
-    pub x3: f64,
-    pub y3: f64,
-    pub x4: f64,
-    pub y4: f64,
+    pub rectangular: Rectangular,
     pub steering_angle: f64,
     pub acceleration: f64,
     rng: ThreadRng,
@@ -27,14 +23,7 @@ impl SensorState {
     pub fn new(car: &Car) -> Self {
         Self {
             state: car.state,
-            x1: car.x1,
-            y1: car.y1,
-            x2: car.x2,
-            y2: car.y2,
-            x3: car.x3,
-            y3: car.y3,
-            x4: car.x4,
-            y4: car.y4,
+            rectangular: car.rectangular,
             steering_angle: car.steering_angle,
             acceleration: car.acceleration,
             rng: thread_rng(),
@@ -88,13 +77,14 @@ impl SensorState {
         let y4 = self.state.y - (car.length / 2.0);
 
         //rotate the four corners of the car based on the yaw
-        self.x1 = x1 * self.state.yaw.cos() - y1 * self.state.yaw.sin();
-        self.y1 = x1 * self.state.yaw.sin() + y1 * self.state.yaw.cos();
-        self.x2 = x2 * self.state.yaw.cos() - y2 * self.state.yaw.sin();
-        self.y2 = x2 * self.state.yaw.sin() + y2 * self.state.yaw.cos();
-        self.x3 = x3 * self.state.yaw.cos() - y3 * self.state.yaw.sin();
-        self.y3 = x3 * self.state.yaw.sin() + y3 * self.state.yaw.cos();
-        self.x4 = x4 * self.state.yaw.cos() - y4 * self.state.yaw.sin();
-        self.y4 = x4 * self.state.yaw.sin() + y4 * self.state.yaw.cos();
+        self.rectangular.x1 = x1 * self.state.yaw.cos() - y1 * self.state.yaw.sin();
+        self.rectangular.y1 = x1 * self.state.yaw.sin() + y1 * self.state.yaw.cos();
+        self.rectangular.x2 = x2 * self.state.yaw.cos() - y2 * self.state.yaw.sin();
+        self.rectangular.y2 = x2 * self.state.yaw.sin() + y2 * self.state.yaw.cos();
+        self.rectangular.x3 = x3 * self.state.yaw.cos() - y3 * self.state.yaw.sin();
+        self.rectangular.y3 = x3 * self.state.yaw.sin() + y3 * self.state.yaw.cos();
+        self.rectangular.x4 = x4 * self.state.yaw.cos() - y4 * self.state.yaw.sin();
+        self.rectangular.y4 = x4 * self.state.yaw.sin() + y4 * self.state.yaw.cos();
     }
 }
+
