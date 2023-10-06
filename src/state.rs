@@ -32,6 +32,17 @@ pub struct CarState {
     pub velocity: f64,
 }
 
+impl CarState {
+    pub fn new() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            yaw: 0.0,
+            velocity: 0.0,
+        }
+    }
+}
+
 //implement the addition and subtraction for car_state
 impl std::ops::Add for CarState {
     type Output = Self;

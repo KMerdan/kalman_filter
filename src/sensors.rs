@@ -51,6 +51,7 @@ pub struct GPSPoint {
     pub speed: f64,
     pub course: f64,
 }
+
 #[derive(Debug, Copy, Clone)]
 pub struct XYZValues {
     pub x: f64,
@@ -68,11 +69,11 @@ pub struct GPS {
 //implement gps value to cartisian coordinate
 impl GPS {
 
-    pub fn new() -> Self {
+    pub fn new(earth_radius:Option<f64>) -> Self {
         Self {
             gps_values: Vec::new(),
             xyz_values: Vec::new(),
-            earth_radius: 6371000.0,
+            earth_radius: earth_radius.unwrap_or(6371000.0),
         }
     }
 
@@ -82,22 +83,55 @@ impl GPS {
             latitude : latitude.to_radians(),
             longitude : longitude.to_radians(),
             altitude : altitude.to_radians(),
-            speed,
+            speed,// only will calculate the speed when converting to cartesian
             course,
         });
     }
 
     // Method to convert GPS coordinates to Cartesian coordinates (ECEF)
-    pub fn to_cartesian(&mut self, idx: usize){
-        let x = self.earth_radius * self.gps_values[idx].latitude.cos() * self.gps_values[idx].longitude.cos();
-        let y = self.earth_radius * self.gps_values[idx].latitude.cos() * self.gps_values[idx].longitude.sin();
-        let z = self.earth_radius * self.gps_values[idx].latitude.sin();
+    pub fn to_cartesian(&mut self, idx: Option<usize>){
+        let _idx = idx.unwrap_or(self.gps_values.len()-1);
+        let x = self.earth_radius * self.gps_values[_idx].latitude.cos() * self.gps_values[_idx].longitude.cos();
+        let y = self.earth_radius * self.gps_values[_idx].latitude.cos() * self.gps_values[_idx].longitude.sin();
+        let z = self.earth_radius * self.gps_values[_idx].latitude.sin();
         self.xyz_values.push(XYZValues {
             x,
             y,
             z,
         });
+        self.gps_values[_idx].speed = self.calculate_speed(Some(_idx));
     }
+
+    pub fn get_xyz(&mut self, idx: usize) -> XYZValues {
+        println!("xyz_values: {:?}", self.xyz_values);
+        self.xyz_values[idx]
+    }
+
+    pub fn calculate_speed(&mut self, idx:Option<usize>) -> f64 {
+        let idx = idx.unwrap_or(self.xyz_values.len()-1);
+        let x = self.xyz_values[idx].x - self.xyz_values[idx-1].x;
+        let y = self.xyz_values[idx].y - self.xyz_values[idx-1].y;
+        let z = self.xyz_values[idx].z - self.xyz_values[idx-1].z;
+        let speed = (x.powi(2) + y.powi(2) + z.powi(2)).sqrt();
+        speed
+    }
+
+    //Method to calculate the convariance of the gps by using the speed and history of the gps
+    pub fn get_covariance(&mut self, idx: Option<usize>) -> f64 {
+        let idx = idx.unwrap_or(self.xyz_values.len()-1);
+        let mut speed_history = Vec::new();
+        for i in 0..idx {
+            speed_history.push(self.gps_values[i].speed);
+        }
+        let mean = speed_history.iter().sum::<f64>() / speed_history.len() as f64;
+        let mut variance = 0.0;
+        for i in 0..idx {
+            variance += (speed_history[i] - mean).powi(2);
+        }
+        variance = variance / speed_history.len() as f64;
+        variance
+    }
+
 }
 
 //wheel encoder device structure
