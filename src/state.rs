@@ -1,4 +1,30 @@
 #[derive(Debug, Copy, Clone)]
+pub struct Rectangular {
+    pub x1: f64,
+    pub y1: f64,
+    pub x2: f64,
+    pub y2: f64,
+    pub x3: f64,
+    pub y3: f64,
+    pub x4: f64,
+    pub y4: f64,
+}
+
+impl Rectangular {
+    pub fn new() -> Self {
+        Self {
+            x1: 0.0,
+            y1: 0.0,
+            x2: 0.0,
+            y2: 0.0,
+            x3: 0.0,
+            y3: 0.0,
+            x4: 0.0,
+            y4: 0.0,
+        }
+    }
+}
+#[derive(Debug, Copy, Clone)]
 pub struct CarState {
     pub x: f64,
     pub y: f64,
@@ -43,34 +69,6 @@ impl std::ops::Mul<f64> for CarState {
         }
     }
 }
-
-#[derive(Debug, Copy, Clone)]
-pub struct Rectangular {
-    pub x1: f64,
-    pub y1: f64,
-    pub x2: f64,
-    pub y2: f64,
-    pub x3: f64,
-    pub y3: f64,
-    pub x4: f64,
-    pub y4: f64,
-}
-
-impl Rectangular {
-    pub fn new() -> Self {
-        Self {
-            x1: 0.0,
-            y1: 0.0,
-            x2: 0.0,
-            y2: 0.0,
-            x3: 0.0,
-            y3: 0.0,
-            x4: 0.0,
-            y4: 0.0,
-        }
-    }
-}
-
 
 impl CarState {
     pub fn to_rectangular(&mut self, width: f64, length: f64)-> Rectangular{

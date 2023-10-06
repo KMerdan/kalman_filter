@@ -19,7 +19,7 @@ use imageproc::drawing::draw_line_segment_mut;
 
 fn main() {
     let mut i = 0;
-    let mut car = Car::new(0.0, 240.0, 0.0, 20.0, 40.0, 0.0, 2.0, 0.5, 0.1);
+    let mut car = Car::new(0.0, 240.0, 0.0, 40.0, 20.0, 0.0, 2.0, 0.5, 0.1);
     let mut sensor = SensorState::new(&car);
     
     let mut window: PistonWindow = WindowSettings::new("Car", [640, 480])
