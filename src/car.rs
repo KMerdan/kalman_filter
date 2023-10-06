@@ -1,10 +1,10 @@
-use piston_window::{types::Matrix2d, *};
-use rand::prelude::*;
-use rand_distr::{Distribution, Normal};
-use nalgebra::{Matrix4, Vector4, Vector2, Vector3, Matrix2};
+// use piston_window::*;
+// use rand::prelude::*;
+// use rand_distr::{Distribution, Normal};
+// use nalgebra::{Matrix4, Vector4, Vector2, Vector3, Matrix2};
 
 use crate::state::CarState;
-
+use crate::state::Rectangular;
 
 #[derive(Debug)]
 pub struct KinematicBicycleModel {
@@ -51,14 +51,7 @@ impl KinematicBicycleModel {
 #[derive(Debug)]
 pub struct Car {
     pub state: CarState,
-    pub x1: f64,
-    pub y1: f64,
-    pub x2: f64,
-    pub y2: f64,
-    pub x3 : f64,    
-    pub y3 : f64,
-    pub x4 : f64,
-    pub y4 : f64,
+    pub rectangular: Rectangular,
     pub width: f64,
     pub length: f64,
     pub acceleration: f64,
@@ -77,14 +70,16 @@ impl Car {
             },
             width,
             length,
-            x1 : x - (width / 2.0),
-            y1 : y - (length / 2.0),
-            x2 : x + (width / 2.0),
-            y2 : y + (length / 2.0),
-            x3 : x - (width / 2.0),
-            y3 : y + (length / 2.0),
-            x4 : x + (width / 2.0),
-            y4 : y - (length / 2.0),
+            rectangular: Rectangular {
+                x1 : x - (width / 2.0),
+                y1 : y - (length / 2.0),
+                x2 : x + (width / 2.0),
+                y2 : y + (length / 2.0),
+                x3 : x - (width / 2.0),
+                y3 : y + (length / 2.0),
+                x4 : x + (width / 2.0),
+                y4 : y - (length / 2.0),
+            },
             acceleration: 0.0,
             steering_angle: 0.0,
             model: KinematicBicycleModel::_new(wheelbase, max_steer, delta_time),
@@ -104,14 +99,14 @@ impl Car {
         let y4 = self.state.y - (self.length / 2.0);
 
         //rotate the four corners of the car based on the yaw
-        self.x1 = x1 * self.state.yaw.cos() - y1 * self.state.yaw.sin();
-        self.y1 = x1 * self.state.yaw.sin() + y1 * self.state.yaw.cos();
-        self.x2 = x2 * self.state.yaw.cos() - y2 * self.state.yaw.sin();
-        self.y2 = x2 * self.state.yaw.sin() + y2 * self.state.yaw.cos();
-        self.x3 = x3 * self.state.yaw.cos() - y3 * self.state.yaw.sin();
-        self.y3 = x3 * self.state.yaw.sin() + y3 * self.state.yaw.cos();
-        self.x4 = x4 * self.state.yaw.cos() - y4 * self.state.yaw.sin();
-        self.y4 = x4 * self.state.yaw.sin() + y4 * self.state.yaw.cos();
+        self.rectangular.x1 = x1 * self.state.yaw.cos() - y1 * self.state.yaw.sin();
+        self.rectangular.y1 = x1 * self.state.yaw.sin() + y1 * self.state.yaw.cos();
+        self.rectangular.x2 = x2 * self.state.yaw.cos() - y2 * self.state.yaw.sin();
+        self.rectangular.y2 = x2 * self.state.yaw.sin() + y2 * self.state.yaw.cos();
+        self.rectangular.x3 = x3 * self.state.yaw.cos() - y3 * self.state.yaw.sin();
+        self.rectangular.y3 = x3 * self.state.yaw.sin() + y3 * self.state.yaw.cos();
+        self.rectangular.x4 = x4 * self.state.yaw.cos() - y4 * self.state.yaw.sin();
+        self.rectangular.y4 = x4 * self.state.yaw.sin() + y4 * self.state.yaw.cos();
 
         self.acceleration = acceleration;
         self.steering_angle = steering_angle;
