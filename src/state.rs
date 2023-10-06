@@ -1,3 +1,4 @@
+use nalgebra::Matrix4;
 #[derive(Debug, Copy, Clone)]
 pub struct Rectangular {
     pub x1: f64,
@@ -30,6 +31,8 @@ pub struct CarState {
     pub y: f64,
     pub yaw: f64,
     pub velocity: f64,
+    pub width: Option<f64>,
+    pub length: Option<f64>,
 }
 
 impl CarState {
@@ -39,6 +42,8 @@ impl CarState {
             y: 0.0,
             yaw: 0.0,
             velocity: 0.0,
+            width: Some(40.0),
+            length: Some(20.0),
         }
     }
 }
@@ -52,6 +57,8 @@ impl std::ops::Add for CarState {
             y: self.y + other.y,
             yaw: self.yaw + other.yaw,
             velocity: self.velocity + other.velocity,
+            width: self.width,
+            length: self.length,
         }
     }
 }
@@ -64,6 +71,8 @@ impl std::ops::Sub for CarState {
             y: self.y - other.y,
             yaw: self.yaw - other.yaw,
             velocity: self.velocity - other.velocity,
+            width: self.width,
+            length: self.length,
         }
     }
 }
@@ -77,6 +86,8 @@ impl std::ops::Mul<f64> for CarState {
             y: self.y * other,
             yaw: self.yaw * other,
             velocity: self.velocity * other,
+            width: self.width,
+            length: self.length,
         }
     }
 }
@@ -104,5 +115,24 @@ impl CarState {
         (rect.x3, rect.y3) = rotate(x3, y3);
         (rect.x4, rect.y4) = rotate(x4, y4);
         rect
+    }
+    pub fn to_matrixv4(&self) -> Matrix4<f64> {
+        let mut matrix = Matrix4::identity();
+        matrix[(0, 0)] = self.x;
+        matrix[(1, 0)] = self.y;
+        matrix[(2, 0)] = self.yaw;
+        matrix[(3, 0)] = self.velocity;
+        matrix
+    }
+
+    pub fn from_matrixv4(matrix: Matrix4<f64>) -> Self {
+        Self {
+            x: matrix[(0, 0)],
+            y: matrix[(1, 0)],
+            yaw: matrix[(2, 0)],
+            velocity: matrix[(3, 0)],
+            width: None,
+            length: None,
+        }
     }
 }

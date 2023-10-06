@@ -21,19 +21,25 @@ fn main() {
     let mut i = 0;
     let mut car = Car::new(0.0, 240.0, 0.0, 40.0, 20.0, 0.0, 2.0, 0.5, 0.1);
     let mut sensor = SensorState::new(&car);
+    let mut kf = kalman_filter::KalmanFilter::new(&car, &sensor);
     
-    let mut window: PistonWindow = WindowSettings::new("Car", [640, 480])
+    let screen_width = 640*2;
+    let screen_height = 480;
+
+    let mut window: PistonWindow = WindowSettings::new("Car", [screen_width, screen_height])
         .exit_on_esc(true)
         .build()
         .unwrap();
-    let mut image_buffer: RgbaImage = ImageBuffer::new(640, 480);
+    let mut image_buffer: RgbaImage = ImageBuffer::new(screen_width, screen_height);
 
-    let ground_truth_colcor = Rgba([0, 255, 0, 255]);
-    let measurement_color = Rgba([255, 0, 0, 255]);
+    let ground_truth_colcor = Rgba([0, 255, 0, 255]);//green
+    let measurement_color = Rgba([255, 0, 0, 255]);//red
+    let estimate_color = Rgba([0, 0, 255, 255]);//blue
 
     while let Some(event) = window.next() {
         car.step(0.1, 0.000001);
         sensor.get_state_from_sensor(&car);
+        kf.update(&sensor);
         // sensor.get_rect(&car);
    
                 
@@ -54,6 +60,12 @@ fn main() {
         draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x3 as f32, sensor.rectangular.y3 as f32), (sensor.rectangular.x4 as f32, sensor.rectangular.y4 as f32), measurement_color);
         draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x4 as f32, sensor.rectangular.y4 as f32), (sensor.rectangular.x1 as f32, sensor.rectangular.y1 as f32), measurement_color);
 
+        // draw estimate car state
+        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x1 as f32, kf.rectangular.y1 as f32), (kf.rectangular.x2 as f32, kf.rectangular.y2 as f32), estimate_color);
+        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x2 as f32, kf.rectangular.y2 as f32), (kf.rectangular.x3 as f32, kf.rectangular.y3 as f32), estimate_color);
+        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x3 as f32, kf.rectangular.y3 as f32), (kf.rectangular.x4 as f32, kf.rectangular.y4 as f32), estimate_color);
+        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x4 as f32, kf.rectangular.y4 as f32), (kf.rectangular.x1 as f32, kf.rectangular.y1 as f32), estimate_color);
+
 
         // Create a texture from the ImageBuffer
         let texture = Texture::from_image(&mut window.create_texture_context(), &image_buffer, &TextureSettings::new()).unwrap();
@@ -66,7 +78,7 @@ fn main() {
 
 
         i += 1;
-        if i > 1000 {
+        if i > 2000 {
             break;
         }
     }

@@ -2,6 +2,7 @@
 // use rand::prelude::*;
 // use rand_distr::{Distribution, Normal};
 // use nalgebra::{Matrix4, Vector4, Vector2, Vector3, Matrix2};
+use nalgebra::{Matrix4};
 
 use crate::state::CarState;
 use crate::state::Rectangular;
@@ -25,6 +26,8 @@ impl KinematicBicycleModel {
                 y: 0.0,
                 yaw: 0.0,
                 velocity: 0.0,
+                width: None,
+                length: None,
             },
         }
     }
@@ -40,7 +43,19 @@ impl KinematicBicycleModel {
             y,
             yaw,
             velocity,
+            width: None,
+            length: None,
         }
+    }
+
+    pub fn _jacobian(&self, x: f64, y: f64, yaw: f64, velocity: f64, steering_angle: f64) -> Matrix4<f64> {
+        let mut jacobian = Matrix4::identity();
+        jacobian[(0, 2)] = -velocity * yaw.sin() * self.dt;
+        jacobian[(0, 3)] = yaw.cos() * self.dt;
+        jacobian[(1, 2)] = velocity * yaw.cos() * self.dt;
+        jacobian[(1, 3)] = yaw.sin() * self.dt;
+        jacobian[(2, 3)] = self.dt / self.wheelbase * steering_angle;
+        jacobian
     }
 }
 
@@ -78,6 +93,8 @@ impl Car {
                 y,
                 yaw,
                 velocity,
+                width: Some(width),
+                length: Some(length),
             },
             width,
             length,
