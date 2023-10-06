@@ -6,6 +6,7 @@ extern crate nalgebra;
 mod car;
 mod state;
 mod kalman_filter;
+mod sensors;
 mod sensor_measurement;
 
 use car::Car;
@@ -42,16 +43,16 @@ fn main() {
         }
         
         // draw ground truth car
-        draw_line_segment_mut(&mut image_buffer, (car.x1 as f32, car.y1 as f32), (car.x2 as f32, car.y2 as f32), ground_truth_colcor);
-        draw_line_segment_mut(&mut image_buffer, (car.x2 as f32, car.y2 as f32), (car.x3 as f32, car.y3 as f32), ground_truth_colcor);
-        draw_line_segment_mut(&mut image_buffer, (car.x3 as f32, car.y3 as f32), (car.x4 as f32, car.y4 as f32), ground_truth_colcor);
-        draw_line_segment_mut(&mut image_buffer, (car.x4 as f32, car.y4 as f32), (car.x1 as f32, car.y1 as f32), ground_truth_colcor);  
+        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x1 as f32, car.rectangular.y1 as f32), (car.rectangular.x2 as f32, car.rectangular.y2 as f32), ground_truth_colcor);
+        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x2 as f32, car.rectangular.y2 as f32), (car.rectangular.x3 as f32, car.rectangular.y3 as f32), ground_truth_colcor);
+        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x3 as f32, car.rectangular.y3 as f32), (car.rectangular.x4 as f32, car.rectangular.y4 as f32), ground_truth_colcor);
+        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x4 as f32, car.rectangular.y4 as f32), (car.rectangular.x1 as f32, car.rectangular.y1 as f32), ground_truth_colcor);  
 
         // draw measurement car
-        draw_line_segment_mut(&mut image_buffer, (sensor.x1 as f32, sensor.y1 as f32), (sensor.x2 as f32, sensor.y2 as f32), measurement_color);
-        draw_line_segment_mut(&mut image_buffer, (sensor.x2 as f32, sensor.y2 as f32), (sensor.x3 as f32, sensor.y3 as f32), measurement_color);
-        draw_line_segment_mut(&mut image_buffer, (sensor.x3 as f32, sensor.y3 as f32), (sensor.x4 as f32, sensor.y4 as f32), measurement_color);
-        draw_line_segment_mut(&mut image_buffer, (sensor.x4 as f32, sensor.y4 as f32), (sensor.x1 as f32, sensor.y1 as f32), measurement_color);
+        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x1 as f32, sensor.rectangular.y1 as f32), (sensor.rectangular.x2 as f32, sensor.rectangular.y2 as f32), measurement_color);
+        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x2 as f32, sensor.rectangular.y2 as f32), (sensor.rectangular.x3 as f32, sensor.rectangular.y3 as f32), measurement_color);
+        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x3 as f32, sensor.rectangular.y3 as f32), (sensor.rectangular.x4 as f32, sensor.rectangular.y4 as f32), measurement_color);
+        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x4 as f32, sensor.rectangular.y4 as f32), (sensor.rectangular.x1 as f32, sensor.rectangular.y1 as f32), measurement_color);
 
 
         // Create a texture from the ImageBuffer
