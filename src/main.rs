@@ -19,7 +19,7 @@ use imageproc::drawing::draw_line_segment_mut;
 
 fn main() {
     let mut i = 0;
-    let mut car = Car::new(0.0, 0.0, 0.0, 20.0, 40.0, 0.0, 2.0, 0.5, 0.1);
+    let mut car = Car::new(0.0, 240.0, 0.0, 20.0, 40.0, 0.0, 2.0, 0.5, 0.1);
     let mut sensor = SensorState::new(&car);
     
     let mut window: PistonWindow = WindowSettings::new("Car", [640, 480])
@@ -32,9 +32,9 @@ fn main() {
     let measurement_color = Rgba([255, 0, 0, 255]);
 
     while let Some(event) = window.next() {
-        car.update(0.1, 0.01);
+        car.step(0.1, 0.000001);
         sensor.get_state_from_sensor(&car);
-        sensor.get_rect(&car);
+        // sensor.get_rect(&car);
    
                 
         // Clear the image buffer and draw on it

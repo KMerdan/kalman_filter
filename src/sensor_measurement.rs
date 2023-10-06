@@ -41,8 +41,9 @@ impl SensorState {
     // the wheel odometry gives the velocity of the car with some noise
     // the steering angle sensor gives the steering angle of the car also with some noise
     pub fn get_state_from_sensor(&mut self, car: &Car) {
-        let accle_noise = self.normal.sample(&mut self.rng);
-        let steering_noise = self.normal.sample(&mut self.rng);
+        let noise_ratio = 0.05;
+        let accle_noise = self.normal.sample(&mut self.rng)*noise_ratio;
+        let steering_noise = self.normal.sample(&mut self.rng)*noise_ratio;
 
         self.acceleration = car.acceleration + accle_noise;
         self.steering_angle = car.steering_angle + steering_noise;
@@ -63,28 +64,8 @@ impl SensorState {
             car.acceleration,
             car.steering_angle,
         ));
-    }
 
-    pub fn get_rect(&mut self, car: &Car) {
-        // self.get_state_from_sensor(car);
-        let x1 = self.state.x - (car.width / 2.0);
-        let y1 = self.state.y - (car.length / 2.0);
-        let x3 = self.state.x + (car.width / 2.0);
-        let y3 = self.state.y + (car.length / 2.0);
-        let x2 = self.state.x - (car.width / 2.0);
-        let y2 = self.state.y + (car.length / 2.0);
-        let x4 = self.state.x + (car.width / 2.0);
-        let y4 = self.state.y - (car.length / 2.0);
-
-        //rotate the four corners of the car based on the yaw
-        self.rectangular.x1 = x1 * self.state.yaw.cos() - y1 * self.state.yaw.sin();
-        self.rectangular.y1 = x1 * self.state.yaw.sin() + y1 * self.state.yaw.cos();
-        self.rectangular.x2 = x2 * self.state.yaw.cos() - y2 * self.state.yaw.sin();
-        self.rectangular.y2 = x2 * self.state.yaw.sin() + y2 * self.state.yaw.cos();
-        self.rectangular.x3 = x3 * self.state.yaw.cos() - y3 * self.state.yaw.sin();
-        self.rectangular.y3 = x3 * self.state.yaw.sin() + y3 * self.state.yaw.cos();
-        self.rectangular.x4 = x4 * self.state.yaw.cos() - y4 * self.state.yaw.sin();
-        self.rectangular.y4 = x4 * self.state.yaw.sin() + y4 * self.state.yaw.cos();
+        self.rectangular = self.state.to_rectangular(car.width, car.length);
     }
 }
 

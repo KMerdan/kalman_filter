@@ -55,3 +55,45 @@ pub struct Rectangular {
     pub x4: f64,
     pub y4: f64,
 }
+
+impl Rectangular {
+    pub fn new() -> Self {
+        Self {
+            x1: 0.0,
+            y1: 0.0,
+            x2: 0.0,
+            y2: 0.0,
+            x3: 0.0,
+            y3: 0.0,
+            x4: 0.0,
+            y4: 0.0,
+        }
+    }
+}
+
+
+impl CarState {
+    pub fn to_rectangular(&mut self, width: f64, length: f64)-> Rectangular{
+        let mut rect = Rectangular::new();
+        let x1 = self.x - (width / 2.0);
+        let y1 = self.y - (length / 2.0);
+        let x3 = self.x + (width / 2.0);
+        let y3 = self.y + (length / 2.0);
+        let x2 = self.x - (width / 2.0);
+        let y2 = self.y + (length / 2.0);
+        let x4 = self.x + (width / 2.0);
+        let y4 = self.y - (length / 2.0);
+
+        // Rotate the four corners of the car based on the yaw.
+        let sin = self.yaw.sin();
+        let cos = self.yaw.cos();
+
+        let rotate = |x: f64, y: f64| (x * cos - y * sin, x * sin + y * cos);
+
+        (rect.x1, rect.y1) = rotate(x1, y1);
+        (rect.x2, rect.y2) = rotate(x2, y2);
+        (rect.x3, rect.y3) = rotate(x3, y3);
+        (rect.x4, rect.y4) = rotate(x4, y4);
+        rect
+    }
+}

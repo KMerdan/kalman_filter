@@ -59,8 +59,19 @@ pub struct Car {
     pub model: KinematicBicycleModel,
 }
 
+
 impl Car {
-    pub fn new(x: f64, y: f64, yaw: f64, width: f64, length: f64, velocity: f64, wheelbase: f64, max_steer: f64, delta_time: f64) -> Self {
+    pub fn new(
+        x: f64,
+        y: f64,
+        yaw: f64,
+        width: f64,
+        length: f64,
+        velocity: f64,
+        wheelbase: f64,
+        max_steer: f64,
+        delta_time: f64
+    ) -> Self {
         Self {
             state: CarState {
                 x,
@@ -86,32 +97,19 @@ impl Car {
         }
     }
 
-    pub fn update(&mut self, acceleration: f64, steering_angle: f64) {
-        self.state = self.model._update(self.state.x, self.state.y, self.state.yaw, self.state.velocity, acceleration, steering_angle);
-        
-        let x1 = self.state.x - (self.width / 2.0);
-        let y1 = self.state.y - (self.length / 2.0);
-        let x3 = self.state.x + (self.width / 2.0);
-        let y3 = self.state.y + (self.length / 2.0);
-        let x2 = self.state.x - (self.width / 2.0);
-        let y2 = self.state.y + (self.length / 2.0);
-        let x4 = self.state.x + (self.width / 2.0);
-        let y4 = self.state.y - (self.length / 2.0);
-
-        //rotate the four corners of the car based on the yaw
-        self.rectangular.x1 = x1 * self.state.yaw.cos() - y1 * self.state.yaw.sin();
-        self.rectangular.y1 = x1 * self.state.yaw.sin() + y1 * self.state.yaw.cos();
-        self.rectangular.x2 = x2 * self.state.yaw.cos() - y2 * self.state.yaw.sin();
-        self.rectangular.y2 = x2 * self.state.yaw.sin() + y2 * self.state.yaw.cos();
-        self.rectangular.x3 = x3 * self.state.yaw.cos() - y3 * self.state.yaw.sin();
-        self.rectangular.y3 = x3 * self.state.yaw.sin() + y3 * self.state.yaw.cos();
-        self.rectangular.x4 = x4 * self.state.yaw.cos() - y4 * self.state.yaw.sin();
-        self.rectangular.y4 = x4 * self.state.yaw.sin() + y4 * self.state.yaw.cos();
-
+    pub fn step(&mut self, acceleration: f64, steering_angle: f64) {
+        self.state = self.model._update(
+            self.state.x,
+            self.state.y,
+            self.state.yaw,
+            self.state.velocity,
+            acceleration,
+            steering_angle
+        );
+        self.rectangular = self.state.to_rectangular(self.width, self.length);
         self.acceleration = acceleration;
         self.steering_angle = steering_angle;
-
     }
-
 }
+
 
