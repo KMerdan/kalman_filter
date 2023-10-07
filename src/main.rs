@@ -1,29 +1,28 @@
-extern crate piston_window;
 extern crate image;
 extern crate imageproc;
 extern crate nalgebra;
+extern crate piston_window;
 
 mod car;
-mod state;
 mod kalman_filter;
-mod sensors;
 mod sensor_measurement;
+mod sensors;
+mod state;
 
 use car::Car;
-use sensor_measurement::SensorState;
+use sensor_measurement::SensorSet;
+use state::{CarColor, CarState, Rectangular};
+
+use image::{ImageBuffer, Rgba, RgbaImage};
 
 use piston_window::*;
-use image::{Rgba, RgbaImage, ImageBuffer};
-use imageproc::drawing::draw_line_segment_mut; 
-
 
 fn main() {
     let mut i = 0;
-    let mut car = Car::new(0.0, 240.0, 0.0, 40.0, 20.0, 0.0, 2.0, 0.5, 0.1);
-    let mut sensor = SensorState::new(&car);
-    let mut kf = kalman_filter::KalmanFilter::new(&car, &sensor);
-    
-    let screen_width = 640*2;
+    let mut car = Car::new(0.0, 240.0, 0.0, 40.0, 20.0, 0.0, 2.0, 0.5, 0.1, None);
+    let mut sensor_measurement = SensorSet::new(&car.state);
+
+    let screen_width = 640 * 2;
     let screen_height = 480;
 
     let mut window: PistonWindow = WindowSettings::new("Car", [screen_width, screen_height])
@@ -32,50 +31,33 @@ fn main() {
         .unwrap();
     let mut image_buffer: RgbaImage = ImageBuffer::new(screen_width, screen_height);
 
-    let ground_truth_colcor = Rgba([0, 255, 0, 255]);//green
-    let measurement_color = Rgba([255, 0, 0, 255]);//red
-    let estimate_color = Rgba([0, 0, 255, 255]);//blue
-
     while let Some(event) = window.next() {
-        car.step(0.1, 0.000001);
-        sensor.get_state_from_sensor(&car);
-        kf.update(&sensor);
-        // sensor.get_rect(&car);
-   
-                
+        let gt_viz_rect = car.step(0.1, 0.001);
+        let sensor_viz_rect = sensor_measurement.get_observed_state(&car.state);
+        println!("CarActual {{ Position: {}/{}, yaw: {}, velocity: {} }}", car.state.x, car.state.y, car.state.yaw, car.state.velocity);
+
         // Clear the image buffer and draw on it
         for pixel in image_buffer.pixels_mut() {
             *pixel = Rgba([1, 1, 1, 0]); // Set the background to transparent
         }
-        
-        // draw ground truth car
-        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x1 as f32, car.rectangular.y1 as f32), (car.rectangular.x2 as f32, car.rectangular.y2 as f32), ground_truth_colcor);
-        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x2 as f32, car.rectangular.y2 as f32), (car.rectangular.x3 as f32, car.rectangular.y3 as f32), ground_truth_colcor);
-        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x3 as f32, car.rectangular.y3 as f32), (car.rectangular.x4 as f32, car.rectangular.y4 as f32), ground_truth_colcor);
-        draw_line_segment_mut(&mut image_buffer, (car.rectangular.x4 as f32, car.rectangular.y4 as f32), (car.rectangular.x1 as f32, car.rectangular.y1 as f32), ground_truth_colcor);  
 
-        // draw measurement car
-        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x1 as f32, sensor.rectangular.y1 as f32), (sensor.rectangular.x2 as f32, sensor.rectangular.y2 as f32), measurement_color);
-        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x2 as f32, sensor.rectangular.y2 as f32), (sensor.rectangular.x3 as f32, sensor.rectangular.y3 as f32), measurement_color);
-        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x3 as f32, sensor.rectangular.y3 as f32), (sensor.rectangular.x4 as f32, sensor.rectangular.y4 as f32), measurement_color);
-        draw_line_segment_mut(&mut image_buffer, (sensor.rectangular.x4 as f32, sensor.rectangular.y4 as f32), (sensor.rectangular.x1 as f32, sensor.rectangular.y1 as f32), measurement_color);
-
-        // draw estimate car state
-        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x1 as f32, kf.rectangular.y1 as f32), (kf.rectangular.x2 as f32, kf.rectangular.y2 as f32), estimate_color);
-        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x2 as f32, kf.rectangular.y2 as f32), (kf.rectangular.x3 as f32, kf.rectangular.y3 as f32), estimate_color);
-        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x3 as f32, kf.rectangular.y3 as f32), (kf.rectangular.x4 as f32, kf.rectangular.y4 as f32), estimate_color);
-        draw_line_segment_mut(&mut image_buffer, (kf.rectangular.x4 as f32, kf.rectangular.y4 as f32), (kf.rectangular.x1 as f32, kf.rectangular.y1 as f32), estimate_color);
-
+        gt_viz_rect.draw_rect(&mut image_buffer);
+        sensor_viz_rect.draw_rect(&mut image_buffer);
+        println!("{}",sensor_measurement);
 
         // Create a texture from the ImageBuffer
-        let texture = Texture::from_image(&mut window.create_texture_context(), &image_buffer, &TextureSettings::new()).unwrap();
+        let texture = Texture::from_image(
+            &mut window.create_texture_context(),
+            &image_buffer,
+            &TextureSettings::new(),
+        )
+        .unwrap();
 
         // Display the texture on the window
         window.draw_2d(&event, |context, graphics, _| {
             clear([1.0; 4], graphics);
             image(&texture, context.transform, graphics);
         });
-
 
         i += 1;
         if i > 2000 {

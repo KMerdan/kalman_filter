@@ -1,71 +1,58 @@
 use rand::rngs::ThreadRng;
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal};
+use std::fmt;
 
-use crate::car::{Car, KinematicBicycleModel};
-use crate::state::CarState;
+use crate::sensors::{Encoder, GPS, IMU};
+use crate::state::{CarColor, CarState};
 
 use crate::state::Rectangular;
 
-
-pub struct SensorState {
-    pub state: CarState,
-    pub rectangular: Rectangular,
-    pub steering_angle: f64,
-    pub acceleration: f64,
-    rng: ThreadRng,
-    normal: Normal<f64>,
-    pub history: Vec<(f64, f64, f64, f64, f64, f64)>,
-    observation_model: KinematicBicycleModel,
+pub struct SensorSet {
+    pub gps: GPS::GpsXYZ,
+    pub imu: IMU::IMUDevice,
+    pub encoder: Encoder::WheelEncoder,
+    pub wheel_encoder: Vec<()>,
+    pub measured_state: CarState,
 }
 
-impl SensorState {
-    pub fn new(car: &Car) -> Self {
+impl SensorSet {
+    pub fn new(actual_car: &CarState) -> Self {
         Self {
-            state: car.state,
-            rectangular: car.rectangular,
-            steering_angle: car.steering_angle,
-            acceleration: car.acceleration,
-            rng: thread_rng(),
-            normal: Normal::new(0.0, 0.1).unwrap(),
-            history: Vec::new(),
-            observation_model: KinematicBicycleModel::_new(
-                car.model.wheelbase,
-                car.model.max_steer,
-                car.model.dt,
-            ),
+            gps: GPS::GpsXYZ::new(None),
+            imu: IMU::IMUDevice::new(),
+            encoder: Encoder::WheelEncoder::new(),
+            wheel_encoder: Vec::new(),
+            measured_state: actual_car.clone(),
         }
     }
 
-    // assume there are a wheel odometry and a steering angle sensor to this car
-    // the wheel odometry gives the velocity of the car with some noise
-    // the steering angle sensor gives the steering angle of the car also with some noise
-    pub fn get_state_from_sensor(&mut self, car: &Car) {
-        let noise_ratio = 0.05;
-        let accle_noise = self.normal.sample(&mut self.rng)*noise_ratio;
-        let steering_noise = self.normal.sample(&mut self.rng)*noise_ratio;
+    pub fn from_carstate(&mut self, car: &CarState) {
+        self.gps.from_carstate(car);
+        self.imu.from_carstate(car);
+        self.encoder.from_carstate(car);
+        // self.wheel_encoder.push(self.encoder.from_carstate(car).clone());
+    }
 
-        self.acceleration = car.acceleration + accle_noise;
-        self.steering_angle = car.steering_angle + steering_noise;
-
-        self.state = self.observation_model._update(
-            self.state.x,
-            self.state.y,
-            self.state.yaw,
-            self.state.velocity,
-            self.acceleration,
-            self.steering_angle,
-        );
-        self.history.push((
-            self.state.x,
-            self.state.y,
-            self.state.yaw,
-            self.state.velocity,
-            car.acceleration,
-            car.steering_angle,
-        ));
-
-        self.rectangular = self.state.to_rectangular(car.width, car.length);
+    pub fn get_observed_state(&mut self, car: &CarState) -> Rectangular{
+        self.from_carstate(car);
+        self.measured_state.time_stamp = self.gps.gps_values.last().unwrap().time_stamp;
+        // self.measured_state.x = self.gps.get_local_xyz(None).x;
+        // self.measured_state.y = self.gps.get_local_xyz(None).y;
+        self.measured_state.x = self.imu.previous_x;
+        self.measured_state.y = self.imu.previous_y;
+        self.measured_state.yaw = self.imu.previous_yaw;
+        self.measured_state.velocity = self.imu.previous_velocity;
+        self.measured_state.to_rectangular(Some(CarColor::Red))
     }
 }
 
+impl fmt::Display for SensorSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SensorSet {{ Position: {}/{}, yaw: {}, velocity: {} }}",
+            self.measured_state.x, self.measured_state.y, self.measured_state.yaw, self.measured_state.velocity
+        )
+    }
+}
